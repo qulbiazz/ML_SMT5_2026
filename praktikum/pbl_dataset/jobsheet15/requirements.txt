@@ -1,0 +1,6 @@
+gradio==6.32.0
+tensorflow-cpu
+numpy
+scikit-learn
+scikit-image
+opencv-python-headless

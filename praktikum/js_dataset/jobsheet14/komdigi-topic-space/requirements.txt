@@ -1,0 +1,5 @@
+gradio==6.32.0
+tensorflow-cpu==2.21.0
+numpy
+scikit-learn==1.7.2
+pandas
