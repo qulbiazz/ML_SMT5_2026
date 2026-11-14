@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Klarifikasi Hoaks Komdigi{% endblock %}
+{% block content %}
+<section class="intro">
+  <h1>Arsip Klarifikasi Hoaks</h1>
+  <p class="muted">Telusuri artikel klarifikasi yang tersedia dalam dataset Komdigi.</p>
+  <div class="stats">
+    <span class="stat">{{ "{:,}".format(dataset_count) }} artikel tersedia</span>
+    {% for category in categories %}
+    <span class="stat">{{ category }}: {{ "{:,}".format(category_counts[category]) }}</span>
+    {% endfor %}
+  </div>
+</section>
+
+<form class="panel filters" method="get" action="{{ url_for('index') }}">
+  <input type="search" name="q" value="{{ query }}" placeholder="Cari judul, isi, atau topik..." aria-label="Kata kunci">
+  <select name="category" aria-label="Kategori">
+    <option value="">Semua kategori</option>
+    {% for category in categories %}
+    <option value="{{ category }}" {% if category == selected_category %}selected{% endif %}>{{ category }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit">Cari</button>
+</form>
+
+<p class="muted">Menampilkan {{ articles|length }} dari {{ "{:,}".format(total) }} artikel{% if query %} untuk “{{ query }}”{% endif %}.</p>
+<section class="article-list">
+  {% for article in articles %}
+  <article class="article-card">
+    <span class="badge">{{ article.category }}</span>
+    <h2><a href="{{ url_for('article_detail', article_id=article.id) }}">{{ article.title or "Tanpa judul" }}</a></h2>
+    <div class="meta">
+      {% if article.published_at %}<time>{{ article.published_at }}</time>{% endif %}
+      {% if article.view_count %} · {{ article.view_count }} dilihat{% endif %}
+    </div>
+    {% if article.excerpt %}<p>{{ article.excerpt }}</p>{% endif %}
+    {% if article.tags %}<div class="meta">Tag: {{ article.tags }}</div>{% endif %}
+  </article>
+  {% else %}
+  <div class="panel empty">Tidak ada artikel yang cocok. Coba kata kunci atau kategori lain.</div>
+  {% endfor %}
+</section>
+
+{% if total_pages > 1 %}
+<nav class="pagination" aria-label="Navigasi halaman">
+  {% if page > 1 %}
+  <a href="{{ url_for('index', q=query, category=selected_category, page=page - 1) }}">← Sebelumnya</a>
+  {% endif %}
+  <span>Halaman {{ page }} dari {{ total_pages }}</span>
+  {% if page < total_pages %}
+  <a href="{{ url_for('index', q=query, category=selected_category, page=page + 1) }}">Berikutnya →</a>
+  {% endif %}
+</nav>
+{% endif %}
+{% endblock %}

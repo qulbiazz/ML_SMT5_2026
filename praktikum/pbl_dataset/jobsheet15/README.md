@@ -1,27 +1,18 @@
----
-title: daynight-classifier-244107020050
-emoji: 🌞
-colorFrom: blue
-colorTo: yellow
-sdk: gradio
-sdk_version: 6.32.0
-app_file: app.py
-license: mit
----
+# Arsip Klarifikasi Hoaks Komdigi
 
-# Day vs Night Classifier
+Aplikasi Flask untuk menelusuri dataset `komdigi_hoaks.csv`. Pengguna dapat mencari artikel berdasarkan judul, ringkasan, isi, tag, dan topik; memfilter kategori; melihat halaman detail; serta membuka artikel sumber.
 
-Unggah gambar untuk memprediksi apakah suasananya siang atau malam.
-
-Space ini menggunakan Gradio SDK dan dapat dijalankan pada CPU Basic gratis Hugging Face Spaces. Model dan scaler dimuat dari file yang disertakan dalam repositori ini.
+Dataset ini hanya berisi kategori **Klarifikasi Hoaks**, sehingga aplikasi menyajikan arsip dan tidak mengklaim dapat mengklasifikasikan berita baru sebagai hoaks atau bukan hoaks.
 
 ## Menjalankan lokal
 
-```bash
-pip install -r requirements.txt
-python app.py
+Jalankan perintah dari root repository:
+
+```powershell
+python -m pip install -r praktikum/pbl_dataset/jobsheet15/requirements.txt
+python praktikum/pbl_dataset/jobsheet15/app.py
 ```
 
-## Membuat Space
+Secara default aplikasi mencari `data/komdigi_hoaks.csv` di root repository atau `komdigi_hoaks.csv` di samping `app.py`. Untuk lokasi lain, atur `KOMDIGI_CSV_PATH`.
 
-Buat Space bernama `daynight-classifier-244107020050` dengan SDK **Gradio**, lisensi MIT, dan visibilitas Public, lalu unggah isi folder ini ke repositori Space. Jangan unggah Access Token atau rahasia lain ke dalam kode maupun berkas proyek.
+Buka `http://127.0.0.1:5000`. Atur `PORT` untuk memilih port lain, atau `FLASK_HOST=0.0.0.0` agar server dapat diakses dari lingkungan container.

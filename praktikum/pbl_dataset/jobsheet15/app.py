@@ -1,59 +1,123 @@
-import pickle
+import csv
+import os
+from collections import Counter
 from pathlib import Path
 
-import cv2
-import gradio as gr
-import numpy as np
-import tensorflow as tf
-from skimage.feature import hog
+from flask import Flask, abort, render_template, request
 
 APP_DIR = Path(__file__).resolve().parent
-MODEL_PATH = APP_DIR / "day_night_model.h5"
-SCALER_PATH = APP_DIR / "scaler.pkl"
-
-model = tf.keras.models.load_model(MODEL_PATH, compile=False)
-with SCALER_PATH.open("rb") as scaler_file:
-    scaler = pickle.load(scaler_file)
 
 
-def predict_image(image: np.ndarray) -> dict[str, float]:
-    if image is None:
-        raise gr.Error("Unggah gambar terlebih dahulu.")
-
-    image = np.asarray(image)
-    if image.ndim != 3 or image.shape[2] != 3:
-        raise gr.Error("Gambar harus memiliki tiga kanal warna (RGB).")
-    if np.issubdtype(image.dtype, np.floating) and image.max() <= 1:
-        image = image * 255
-    image = np.clip(image, 0, 255).astype(np.uint8)
-
-    resized = cv2.resize(image, (256, 256))
-    grayscale = cv2.cvtColor(resized, cv2.COLOR_RGB2GRAY)
-    features = hog(
-        grayscale,
-        orientations=9,
-        pixels_per_cell=(8, 8),
-        cells_per_block=(2, 2),
-        block_norm="L2-Hys",
-        visualize=False,
-        feature_vector=True,
+def find_dataset() -> Path:
+    configured_path = os.environ.get("KOMDIGI_CSV_PATH")
+    candidates = ([Path(configured_path)] if configured_path else []) + [
+        APP_DIR / "komdigi_hoaks.csv",
+        *(parent / "data" / "komdigi_hoaks.csv" for parent in APP_DIR.parents),
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate.resolve()
+    raise FileNotFoundError(
+        "komdigi_hoaks.csv tidak ditemukan. Letakkan di folder data/ repository, "
+        "di samping app.py, atau atur environment variable KOMDIGI_CSV_PATH."
     )
-    scaled_features = scaler.transform(features.reshape(1, -1))
-    day_probability = float(model.predict(scaled_features, verbose=0)[0][0])
-
-    return {
-        "Day (Siang)": day_probability,
-        "Night (Malam)": 1 - day_probability,
-    }
 
 
-demo = gr.Interface(
-    fn=predict_image,
-    inputs=gr.Image(type="numpy", image_mode="RGB", label="Unggah gambar"),
-    outputs=gr.Label(num_top_classes=2, label="Hasil prediksi"),
-    title="Day vs Night Classifier",
-    description="Unggah gambar untuk mengklasifikasikannya sebagai siang atau malam.",
-)
+def load_articles(csv_path: Path) -> list[dict[str, str]]:
+    with csv_path.open(encoding="utf-8-sig", newline="") as csv_file:
+        reader = csv.DictReader(csv_file)
+        required_columns = {"id", "title", "category"}
+        missing_columns = required_columns - set(reader.fieldnames or [])
+        if missing_columns:
+            raise ValueError(
+                f"Kolom wajib tidak ditemukan di {csv_path}: {', '.join(sorted(missing_columns))}"
+            )
+
+        articles = []
+        for row in reader:
+            article = {key: (value or "").strip() for key, value in row.items() if key}
+            article.setdefault("excerpt", "")
+            article.setdefault("body_text", "")
+            article.setdefault("published_at", "")
+            article.setdefault("url", "")
+            article.setdefault("view_count", "0")
+            article.setdefault("tags", "")
+            article.setdefault("topics", "")
+            articles.append(article)
+
+    return sorted(
+        articles,
+        key=lambda article: (article["published_at"], article["id"]),
+        reverse=True,
+    )
+
+
+DATASET_PATH = find_dataset()
+ARTICLES = load_articles(DATASET_PATH)
+CATEGORIES = sorted({article["category"] for article in ARTICLES if article["category"]})
+CATEGORY_COUNTS = Counter(article["category"] for article in ARTICLES)
+
+app = Flask(__name__)
+app.config["ARTICLES_PER_PAGE"] = 20
+
+
+@app.get("/")
+def index():
+    query = request.args.get("q", "").strip()
+    selected_category = request.args.get("category", "").strip()
+    try:
+        page = max(1, int(request.args.get("page", "1")))
+    except ValueError:
+        page = 1
+
+    filtered_articles = ARTICLES
+    if selected_category in CATEGORIES:
+        filtered_articles = [
+            article for article in filtered_articles
+            if article["category"] == selected_category
+        ]
+    elif selected_category:
+        selected_category = ""
+
+    if query:
+        search_query = query.casefold()
+        searchable_fields = ("title", "excerpt", "body_text", "tags", "topics")
+        filtered_articles = [
+            article for article in filtered_articles
+            if any(search_query in article[field].casefold() for field in searchable_fields)
+        ]
+
+    per_page = app.config["ARTICLES_PER_PAGE"]
+    total = len(filtered_articles)
+    total_pages = max(1, (total + per_page - 1) // per_page)
+    page = min(page, total_pages)
+    start = (page - 1) * per_page
+
+    return render_template(
+        "index.html",
+        articles=filtered_articles[start:start + per_page],
+        categories=CATEGORIES,
+        category_counts=CATEGORY_COUNTS,
+        selected_category=selected_category,
+        query=query,
+        page=page,
+        total_pages=total_pages,
+        total=total,
+        dataset_count=len(ARTICLES),
+    )
+
+
+@app.get("/hoaks/<article_id>")
+def article_detail(article_id: str):
+    article = next((item for item in ARTICLES if item["id"] == article_id), None)
+    if article is None:
+        abort(404)
+    return render_template("detail.html", article=article)
+
 
 if __name__ == "__main__":
-    demo.launch()
+    app.run(
+        host=os.environ.get("FLASK_HOST", "127.0.0.1"),
+        port=int(os.environ.get("PORT", "5000")),
+        debug=os.environ.get("FLASK_DEBUG", "").lower() == "true",
+    )

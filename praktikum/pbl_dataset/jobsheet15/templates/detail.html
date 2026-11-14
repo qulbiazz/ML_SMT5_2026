@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} | Klarifikasi Hoaks Komdigi{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('index') }}">← Kembali ke daftar artikel</a>
+<article class="article-detail">
+  <span class="badge">{{ article.category }}</span>
+  <h1>{{ article.title or "Tanpa judul" }}</h1>
+  <div class="meta">
+    {% if article.published_at %}<time>{{ article.published_at }}</time>{% endif %}
+    {% if article.view_count %} · {{ article.view_count }} dilihat{% endif %}
+  </div>
+  {% if article.excerpt %}<p><strong>{{ article.excerpt }}</strong></p>{% endif %}
+  {% if article.tags %}<p class="meta">Tag: {{ article.tags }}</p>{% endif %}
+  {% if article.topics %}<p class="meta">Topik: {{ article.topics }}</p>{% endif %}
+  <hr>
+  <div class="article-body">{{ article.body_text or article.excerpt or "Isi artikel tidak tersedia." }}</div>
+  {% if article.url %}
+  <p><a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">Buka artikel sumber Komdigi ↗</a></p>
+  {% endif %}
+</article>
+{% endblock %}
