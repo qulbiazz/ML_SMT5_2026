@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Klasifikasi Berita | PBL{% endblock %}
+{% block content %}
+<section class="intro">
+  <h1>Klasifikasi Hoaks atau Valid</h1>
+  <p class="muted">
+    Masukkan judul dan/atau isi berita untuk mendapatkan prediksi model pembelajaran mesin.
+    Hasil ini adalah prediksi teks, bukan verifikasi fakta.
+  </p>
+</section>
+
+<form class="panel classifier-panel classifier-form" method="post" action="{{ url_for('classify_news') }}">
+  <label for="title">Judul berita</label>
+  <input id="title" name="title" type="text" value="{{ title }}" placeholder="Masukkan judul berita">
+  <label for="article_text">Isi atau ringkasan berita</label>
+  <textarea id="article_text" name="article_text" placeholder="Tempelkan isi atau ringkasan berita">{{ article_text }}</textarea>
+  {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+  <button type="submit">Klasifikasikan berita</button>
+</form>
+
+{% if prediction %}
+<section class="panel result result-{{ prediction.label }}" aria-live="polite">
+  <h2>Hasil prediksi: {{ "Hoaks" if prediction.label == "hoax" else "Valid" }}</h2>
+  {% if prediction.used_valid_fallback %}
+  <p>
+    Syarat deteksi hoaks tidak terpenuhi (skor hoaks
+    {{ "{:.1%}".format(prediction.confidence) }}, cakupan fitur
+    {{ "{:.1%}".format(prediction.feature_coverage) }}). Hasil biner ditetapkan
+    <strong>Valid</strong>; ini bukan verifikasi fakta. Periksa sumber tepercaya.
+  </p>
+  {% else %}
+  <p>Skor keyakinan model: {{ "{:.1%}".format(prediction.confidence) }}</p>
+  {% endif %}
+  {% if not prediction.used_valid_fallback %}
+  <p class="muted">Skor ini bukan jaminan kebenaran. Periksa sumber tepercaya sebelum membagikan berita.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="panel">
+  <h2>Tentang model</h2>
+  <p>
+    Model menggunakan fitur kata biner dan Bernoulli Naive Bayes, dilatih dari
+    {{ "{:,}".format(metrics.training_count) }} berita berlabel <strong>hoax</strong> atau
+    <strong>valid</strong>. Data tanpa label yang jelas tidak digunakan.
+  </p>
+  <p>
+    Evaluasi pada data uji ({{ "{:,}".format(metrics.test_count) }} berita terpisah):
+    akurasi {{ "{:.1%}".format(metrics.accuracy) }} dan macro F1 {{ "{:.1%}".format(metrics.macro_f1) }}.
+    Hasil evaluasi ini hanya menggambarkan dataset pelatihan, bukan semua berita terkini.
+  </p>
+</section>
+{% endblock %}

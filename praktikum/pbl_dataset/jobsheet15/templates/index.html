@@ -1,9 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Klarifikasi Hoaks Komdigi{% endblock %}
+{% block title %}Arsip Klarifikasi Hoaks Komdigi{% endblock %}
 {% block content %}
 <section class="intro">
   <h1>Arsip Klarifikasi Hoaks</h1>
   <p class="muted">Telusuri artikel klarifikasi yang tersedia dalam dataset Komdigi.</p>
+  <p><a href="{{ url_for('classify_news') }}">Coba klasifikasi berita hoaks atau valid →</a></p>
   <div class="stats">
     <span class="stat">{{ "{:,}".format(dataset_count) }} artikel tersedia</span>
     {% for category in categories %}
