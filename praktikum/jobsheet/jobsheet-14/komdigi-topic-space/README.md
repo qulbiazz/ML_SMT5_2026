@@ -27,7 +27,7 @@ Vectorizer TF-IDF harus digunakan kembali persis seperti saat model dilatih.
 
 ## Melatih ulang dan mengekspor model
 
-Dari folder ini, pastikan dataset tersedia di `../../../../data/komdigi_hoaks.csv`,
+Dari folder ini, pastikan dataset tersedia di `../../../../data/tabular/komdigi_hoaks.csv`,
 lalu jalankan:
 
 ```bash

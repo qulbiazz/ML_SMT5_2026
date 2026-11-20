@@ -19,13 +19,16 @@ def find_training_dataset() -> Path:
     configured_path = os.environ.get("HOAX_TRAINING_CSV_PATH")
     candidates = ([Path(configured_path)] if configured_path else []) + [
         APP_DIR / "datasetUMPOHoax.csv",
-        *(parent / "data" / "datasetUMPOHoax.csv" for parent in APP_DIR.parents),
+        *(
+            parent / "data" / "tabular" / "datasetUMPOHoax.csv"
+            for parent in APP_DIR.parents
+        ),
     ]
     for candidate in candidates:
         if candidate.is_file():
             return candidate.resolve()
     raise FileNotFoundError(
-        "datasetUMPOHoax.csv tidak ditemukan. Letakkan di folder data/ repository, "
+        "datasetUMPOHoax.csv tidak ditemukan. Letakkan di folder data/tabular/ repository, "
         "di samping app.py, atau atur environment variable HOAX_TRAINING_CSV_PATH."
     )
 
@@ -34,13 +37,16 @@ def find_dataset() -> Path:
     configured_path = os.environ.get("KOMDIGI_CSV_PATH")
     candidates = ([Path(configured_path)] if configured_path else []) + [
         APP_DIR / "komdigi_hoaks.csv",
-        *(parent / "data" / "komdigi_hoaks.csv" for parent in APP_DIR.parents),
+        *(
+            parent / "data" / "tabular" / "komdigi_hoaks.csv"
+            for parent in APP_DIR.parents
+        ),
     ]
     for candidate in candidates:
         if candidate.is_file():
             return candidate.resolve()
     raise FileNotFoundError(
-        "komdigi_hoaks.csv tidak ditemukan. Letakkan di folder data/ repository, "
+        "komdigi_hoaks.csv tidak ditemukan. Letakkan di folder data/tabular/ repository, "
         "di samping app.py, atau atur environment variable KOMDIGI_CSV_PATH."
     )
 

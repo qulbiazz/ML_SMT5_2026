@@ -11,14 +11,14 @@ from sklearn.utils.class_weight import compute_class_weight
 
 APP_DIR = Path(__file__).resolve().parent
 DATA_CANDIDATES = [
-    APP_DIR / "../../../../data/komdigi_hoaks.csv",
-    APP_DIR / "../../../data/komdigi_hoaks.csv",
-    APP_DIR / "data/komdigi_hoaks.csv",
+    APP_DIR / "../../../../data/tabular/komdigi_hoaks.csv",
+    APP_DIR / "../../../data/tabular/komdigi_hoaks.csv",
+    APP_DIR / "data/tabular/komdigi_hoaks.csv",
 ]
 DATA_PATH = next((path.resolve() for path in DATA_CANDIDATES if path.exists()), None)
 if DATA_PATH is None:
     raise FileNotFoundError(
-        "komdigi_hoaks.csv tidak ditemukan. Simpan file tersebut di folder data repositori."
+        "komdigi_hoaks.csv tidak ditemukan. Simpan file tersebut di folder data/tabular repositori."
     )
 
 RANDOM_STATE = 42
